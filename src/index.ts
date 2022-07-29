@@ -2,6 +2,8 @@ import { ActivityType, Client, EmbedBuilder } from "discord.js";
 import { Configuration, OpenAIApi } from "openai";
 import "dotenv/config";
 
+import { Dalle, Generations } from "./dalle";
+
 // Initialise a new client
 const client = new Client({
   intents: ["Guilds", "GuildMessages", "MessageContent"],
@@ -13,6 +15,16 @@ const config = new Configuration({
 });
 
 const openai = new OpenAIApi(config);
+
+// Config Dalle-2
+const dalle = new Dalle(process.env.OPEN_AI_SESS_KEY!);
+
+// Dalle-2 API
+const getDalleImage = async (caption: string) => {
+  const imageGenerations = await dalle.generate(caption);
+
+  return imageGenerations;
+};
 
 // When the bot is ready
 client.once("ready", () => {
@@ -93,6 +105,37 @@ client.on("messageCreate", async (messageCreate) => {
     .setFooter({ text: "This was created using Open AI" });
 
   messageCreate.reply({ embeds: [embed] });
+});
+
+// Slash commands
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName } = interaction;
+
+  switch (commandName) {
+    case "dalle":
+      const caption = interaction.options.getString("caption");
+
+      if (!caption) {
+        interaction.reply(
+          "Please input a caption so I can generate an image for you."
+        );
+
+        return;
+      }
+
+      await interaction.deferReply();
+      const { data }: Generations = await getDalleImage(caption);
+
+      const image = data[0].generation.image_path;
+
+      await interaction.editReply(image);
+      break;
+
+    default:
+      break;
+  }
 });
 
 // Login to Discord
