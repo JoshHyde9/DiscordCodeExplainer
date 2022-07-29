@@ -1,10 +1,18 @@
 import { ActivityType, Client } from "discord.js";
+import { Configuration, OpenAIApi } from "openai";
 import "dotenv/config";
 
 // Initialise a new client
 const client = new Client({
   intents: ["Guilds", "GuildMessages", "MessageContent"],
 });
+
+// Config Open AI
+const config = new Configuration({
+  apiKey: process.env.OPEN_API_KEY,
+});
+
+const openai = new OpenAIApi(config);
 
 // When the bot is ready
 client.once("ready", () => {
@@ -24,6 +32,9 @@ client.once("ready", () => {
     }`
   );
 });
+
+// Send a request to the OpenAI API
+const analyseCode = (code: string) => {};
 
 // Everytime a message is created
 client.on("messageCreate", async (messageCreate) => {
