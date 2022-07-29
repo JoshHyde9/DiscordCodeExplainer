@@ -37,11 +37,7 @@ client.once("ready", () => {
   // Log when bot turns on
   console.log("Ready or not, here I come to look at some garbage code!");
   console.log(
-    `I am currently connected to ${
-      client.guilds.cache.size === 1
-        ? `${client.guilds.cache.size} server`
-        : `${client.guilds.cache.size} servers`
-    }`
+    `I am currently connected to ${client.guilds.cache.size} ${client.guilds.cache.size > 1 ? "servers" : "server"}`
   );
 });
 
