@@ -66,7 +66,7 @@ export class Dalle {
       });
 
       if (!response.ok) {
-        console.log(response);
+        console.error(response);
         return;
       }
 
@@ -83,7 +83,7 @@ export class Dalle {
         });
 
         if (!response.ok) {
-          console.log(response);
+          console.error(response);
           return;
         }
 
