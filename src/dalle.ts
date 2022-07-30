@@ -1,4 +1,4 @@
-interface RequestProps {
+interface RequestBody {
   task_type: string;
   prompt: {
     caption: string;
@@ -50,7 +50,7 @@ export class Dalle {
   }
 
   async generate(prompt: string) {
-    const body: RequestProps = {
+    const body: RequestBody = {
       task_type: "text2im",
       prompt: { caption: prompt, batch_size: 4 },
     };
