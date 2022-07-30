@@ -9,15 +9,15 @@ const client = new Client({
   intents: ["Guilds", "GuildMessages", "MessageContent"],
 });
 
-// Config Open AI
+// Config Codex Open AI
 const config = new Configuration({
-  apiKey: process.env.OPEN_AI_KEY as string,
+  apiKey: process.env.CODEX_API_KEY!,
 });
 
 const openai = new OpenAIApi(config);
 
 // Config Dalle-2
-const dalle = new Dalle({ apiKey: process.env.OPEN_AI_SESS_KEY! });
+const dalle = new Dalle({ apiKey: process.env.DALLE2_SESSION_KEY! });
 
 // Dalle-2 API
 const getDalleImage = async (caption: string) => {

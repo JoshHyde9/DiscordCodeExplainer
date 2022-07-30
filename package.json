@@ -1,12 +1,13 @@
 {
   "name": "discordcodeexplainer",
   "version": "1.0.0",
-  "description": "A Discord bot that uses Open AI's Davinci 002 AI model to analyse Discord user's code",
+  "description": "A Discord bot that uses Open AI's Codex and Dalle2 API",
   "main": "src/index.ts",
   "scripts": {
     "watch": "tsc -w",
     "dev": "nodemon ./dist/index.js",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "commands": "node ./dist/deploy-commands.js"
   },
   "keywords": [],
   "author": "",
