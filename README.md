@@ -26,3 +26,23 @@ cp .env.sample .env
 9. Run ``npm run build`` to compile the TypeScript files into JavaScript files.
 10. Run ``npm run commands`` to deploy the slash commands to the bot.
 11. Run ``npm start`` to start the bot and pray that you've setup the bot correctly.
+
+## Commands 
+
+### Code Explainer
+
+The code explainer isn't really a command but the bot is always listening for valid code blocks that look like this: 
+<pre>
+```ts
+const yeet: string = "Hello World!";
+```
+</pre>
+The code is then sent off to the Codex API and reply to the user with either a reply of nothing being found or a fancy embed with a description of the analysed code.
+
+### Dalle
+
+```
+/dalle caption: An Impressionist oil painting of sunflowers in a purple vase…
+```
+
+The bot will get the inputted caption and send it off to the Dalle-2 API, Dalle-2 will generate an array of images and then the bot will reply to the user with the first image in the array that the AI returned.
