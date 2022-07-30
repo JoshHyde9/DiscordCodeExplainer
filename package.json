@@ -1,9 +1,10 @@
 {
   "name": "discordcodeexplainer",
   "version": "1.0.0",
-  "description": "A Discord bot that uses Open AI's Codex and Dalle2 API",
+  "description": "A Discord bot that uses Open AI's Codex and Dalle2 APIs",
   "main": "src/index.ts",
   "scripts": {
+    "build": "tsc",
     "watch": "tsc -w",
     "dev": "nodemon ./dist/index.js",
     "start": "node ./dist/index.js",
