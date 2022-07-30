@@ -14,7 +14,7 @@ interface Task {
   status: string;
   status_information: {};
   prompt_id: string;
-  generations: Generations;
+  generations: ImageGenerations;
   prompt: {
     id: string;
     ojbect: string;
@@ -25,7 +25,7 @@ interface Task {
   };
 }
 
-export interface Generations {
+export interface ImageGenerations {
   object: string;
   data: [
     {
@@ -42,10 +42,10 @@ export interface Generations {
 }
 
 export class Dalle {
-  bearerToken: string;
+  apiKey: string;
   url: string;
-  constructor(bearerToken: string) {
-    this.bearerToken = bearerToken;
+  constructor({ apiKey }: { apiKey: string }) {
+    this.apiKey = apiKey;
     this.url = "https://labs.openai.com/api/labs/tasks";
   }
 
@@ -55,11 +55,11 @@ export class Dalle {
       prompt: { caption: prompt, batch_size: 4 },
     };
 
-    return new Promise<Generations>(async (resolve, reject) => {
+    return new Promise<ImageGenerations>(async (resolve, reject) => {
       const response = await fetch(this.url, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${this.bearerToken}`,
+          Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
@@ -77,7 +77,7 @@ export class Dalle {
       const refreshIntervalId = setInterval(async () => {
         const response = await fetch(`${this.url}/${taskId}`, {
           headers: {
-            Authorization: `Bearer ${this.bearerToken}`,
+            Authorization: `Bearer ${this.apiKey}`,
             "Content-Type": "application/json",
           },
         });
@@ -91,11 +91,11 @@ export class Dalle {
 
         if (data.status === "rejected") {
           clearInterval(refreshIntervalId);
-          resolve(data.status_information as Generations);
+          resolve(data.status_information as ImageGenerations);
         } else if (data.status === "succeeded") {
           const generations = data.generations;
           clearInterval(refreshIntervalId);
-          resolve(generations as Generations);
+          resolve(generations as ImageGenerations);
         }
       }, 3000);
     });
