@@ -1,4 +1,10 @@
-import { ActivityType, Client, EmbedBuilder } from "discord.js";
+import {
+  ActivityType,
+  Client,
+  EmbedBuilder,
+  Message,
+  MessagePayload,
+} from "discord.js";
 import { Configuration, OpenAIApi } from "openai";
 import "dotenv/config";
 
@@ -120,7 +126,7 @@ client.on("interactionCreate", async (interaction) => {
 
       // If user didn't input a caption
       if (!caption) {
-        interaction.reply(
+        await interaction.reply(
           "Please input a caption so I can generate an image for you."
         );
 
@@ -129,7 +135,26 @@ client.on("interactionCreate", async (interaction) => {
 
       await interaction.deferReply(); // Display "bot is thinking..." whilst the bot talks to the Dalle-2 Open AI API
 
-      const { data }: ImageGenerations = await getDalleImage(caption); // Call the API to get the image
+      const response = await getDalleImage(caption); // Call the Dall-e 2 API to get an initial response
+
+      // Let the user know that Dall-e 2 couldn't generate an image
+      if (!response) {
+        await interaction.editReply(
+          "Dall-e 2 couldn't generate images based upon your caption."
+        );
+        return;
+      }
+
+      // Get the image array from the response
+      const { data } = response;
+
+      // If the image object was empty
+      if (!data) {
+        await interaction.editReply(
+          "Dall-e 2 couldn't generate images based upon your caption."
+        );
+        return;
+      }
 
       const image = data[0].generation.image_path; // Get the first image URL from the response
 
