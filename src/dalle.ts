@@ -70,7 +70,7 @@ export class Dalle {
       if (!response.ok) {
         console.error(response);
         return reject(
-          "Dall-e 2 couldn't generate images based upon on your caption."
+          "Dall-e 2 couldn't generate images based upon your caption."
         );
       }
 
@@ -89,7 +89,7 @@ export class Dalle {
         if (!response.ok) {
           console.error(response);
           return reject(
-            "Dall-e 2 couldn't generate images based upon on your caption."
+            "Dall-e 2 couldn't generate images based upon your caption."
           );
         }
 
