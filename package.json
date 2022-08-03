@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A Discord bot that uses Open AI's Codex and Dalle2 APIs",
   "main": "src/index.ts",
+  "engines": {
+    "node": "17.5"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
