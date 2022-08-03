@@ -1,14 +1,8 @@
-import {
-  ActivityType,
-  Client,
-  EmbedBuilder,
-  Message,
-  MessagePayload,
-} from "discord.js";
+import { ActivityType, Client, EmbedBuilder } from "discord.js";
 import { Configuration, OpenAIApi } from "openai";
 import "dotenv/config";
 
-import { Dalle, ImageGenerations } from "./dalle";
+import { Dalle } from "./dalle";
 
 // Initialise a new client
 const client = new Client({
@@ -33,7 +27,9 @@ const getDalleImage = async (caption: string) => {
 };
 
 // Send a request to the Codex Open AI API
-const analyseCode = async (code: string): Promise<string | undefined> => {
+const analyseCode = async (
+  code: string
+): Promise<string | undefined | null> => {
   const { data } = await openai.createCompletion({
     model: "code-davinci-002",
     prompt: code,
@@ -45,13 +41,51 @@ const analyseCode = async (code: string): Promise<string | undefined> => {
     stop: ['"""'],
   });
 
+  if (!data) {
+    return null;
+  }
+
   // If Davinci returned nothing
   if (data.choices === undefined || data.choices[0].text === "") {
-    return "Couldn't find anything...";
+    return undefined;
   }
 
   // Return the code analysis
   return data.choices[0].text;
+};
+
+// Parse the description OpenAI's Davinci generated
+const fixCodeDescription = async (
+  codeDescription: string
+): Promise<string | null> => {
+  codeDescription = codeDescription.trim(); // Trim the weird white space
+
+  // Return null if the string is empty after removing the white space
+  if (codeDescription === "") {
+    return null;
+  }
+
+  codeDescription = codeDescription.replace('+ "', ""); // Remove the end of the string concatination
+
+  const descriptionArray = codeDescription.split(/\d{1}\./); // Split string into an array of strings at each step number (1. 2. 3.)
+
+  // Itereate over each
+  descriptionArray.map((step, i) => {
+    // Remove index from array if string is empty
+    if (step.length <= 0) {
+      descriptionArray.pop();
+    }
+
+    descriptionArray[i] = `${i + 1}. ${step}`; // Concat index number and step string value to array position i
+
+    return descriptionArray;
+  });
+
+  codeDescription = descriptionArray.join("\n"); // Join the array back to one string and add a new line to the end of each one
+
+  codeDescription = codeDescription.slice(0, -1); // Remove the last " from the end of the string
+
+  return codeDescription; // Return the final value of the string
 };
 
 // When the bot is ready
@@ -93,11 +127,13 @@ client.on("messageCreate", async (messageCreate) => {
   message = message.replace(regExp, ""); // Remove what what the regex matched
   message = message.slice(0, -3); // Remove the ``` at the end of the code block
 
-  message = message.concat('"""\n Here\'s what the above code is doing:\n1.');
+  message = message.concat('"""\nHere\'s what the above code is doing:1.');
 
-  const code = JSON.stringify(message); // Stringify the message
+  const minifiedMessage = message.replace(/    /g, "");
 
-  let data = await analyseCode(code); // Send stringified message to the Codex Open AI API
+  const code = JSON.stringify(minifiedMessage); // Stringify the message
+
+  const data = await analyseCode(code); // Send stringified message to the Codex Open AI API
 
   // If the API didn't return anything
   if (!data) {
@@ -105,26 +141,7 @@ client.on("messageCreate", async (messageCreate) => {
     return;
   }
 
-  data = data.replace(/^\n/, ""); // Remove the starting line break
-  data = data.substring(10); // Remove the consistent weird 9 character blank space at the start of the "string"
-
-  const stringArray = data.split("\\n"); // Split at each "line break"
-
-  const invalidIndex = new RegExp(/[0-9].$/); // Match "1." instead of "1. " "
-
-  // Iterate over each array index and remove from the array if it doesn't match the regex
-  stringArray.map((index) => {
-    // Remove the invalid indexes from the array
-    if (index.match(invalidIndex)) {
-      stringArray.pop();
-    }
-
-    return stringArray; // Return the array
-  });
-
-  data = stringArray.join("\n"); // Join the array of strings together with a real line break
-
-  data = `1. ${data}`; // Add the first index to the string
+  const codeDescription = await fixCodeDescription(data);
 
   // Build an embed and reply to the user
   const embed = new EmbedBuilder()
@@ -132,12 +149,14 @@ client.on("messageCreate", async (messageCreate) => {
     .setTitle("Code Explainer")
     .addFields({
       name: "Here's my interpretation of what your garbage code is doing: ",
-      value: data,
+      value:
+        codeDescription ??
+        "**Failed to interpret your code block, sorry not sorry :)**",
     })
     .setTimestamp()
     .setFooter({ text: "This was created using Open AI's Davinci model." });
 
-  messageCreate.reply({ embeds: [embed] });
+  await messageCreate.reply({ embeds: [embed] });
 });
 
 // Slash commands
