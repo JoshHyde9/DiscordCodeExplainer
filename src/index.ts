@@ -33,9 +33,9 @@ const getDalleImage = async (caption: string) => {
 };
 
 // Send a request to the Codex Open AI API
-const analyseCode = async (code: string) => {
+const analyseCode = async (code: string): Promise<string | undefined> => {
   const { data } = await openai.createCompletion({
-    model: "code-davinci:002",
+    model: "code-davinci-002",
     prompt: code,
     temperature: 0,
     max_tokens: 64,
@@ -45,10 +45,12 @@ const analyseCode = async (code: string) => {
     stop: ['"""'],
   });
 
+  // If Davinci returned nothing
   if (data.choices === undefined || data.choices[0].text === "") {
     return "Couldn't find anything...";
   }
 
+  // Return the code analysis
   return data.choices[0].text;
 };
 
@@ -91,9 +93,11 @@ client.on("messageCreate", async (messageCreate) => {
   message = message.replace(regExp, ""); // Remove what what the regex matched
   message = message.slice(0, -3); // Remove the ``` at the end of the code block
 
+  message = message.concat('"""\n Here\'s what the above code is doing:\n1.');
+
   const code = JSON.stringify(message); // Stringify the message
 
-  const data = await analyseCode(code); // Send stringified message to the Codex Open AI API
+  let data = await analyseCode(code); // Send stringified message to the Codex Open AI API
 
   // If the API didn't return anything
   if (!data) {
@@ -101,14 +105,37 @@ client.on("messageCreate", async (messageCreate) => {
     return;
   }
 
+  data = data.replace(/^\n/, ""); // Remove the starting line break
+  data = data.substring(10); // Remove the consistent weird 9 character blank space at the start of the "string"
+
+  const stringArray = data.split("\\n"); // Split at each "line break"
+
+  const invalidIndex = new RegExp(/[0-9].$/); // Match "1." instead of "1. " "
+
+  // Iterate over each array index and remove from the array if it doesn't match the regex
+  stringArray.map((index) => {
+    // Remove the invalid indexes from the array
+    if (index.match(invalidIndex)) {
+      stringArray.pop();
+    }
+
+    return stringArray; // Return the array
+  });
+
+  data = stringArray.join("\n"); // Join the array of strings together with a real line break
+
+  data = `1. ${data}`; // Add the first index to the string
+
   // Build an embed and reply to the user
   const embed = new EmbedBuilder()
     .setColor("#ff00ff")
     .setTitle("Code Explainer")
-    .setDescription("This is my interpretation of your hot garbage code")
-    .addFields({ name: "Your code: ", value: data! })
+    .addFields({
+      name: "Here's my interpretation of what your garbage code is doing: ",
+      value: data,
+    })
     .setTimestamp()
-    .setFooter({ text: "This was created using Open AI" });
+    .setFooter({ text: "This was created using Open AI's Davinci model." });
 
   messageCreate.reply({ embeds: [embed] });
 });
